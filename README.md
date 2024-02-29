@@ -5,7 +5,9 @@ sale. Of course people’s tastes differ so the criteria that make a carpet desi
 change depending on the customer or type of carpet. You’ll be trying to satisfy customer demand as well as you possibly can from the stock of material available.
 In any given scenario, you will have a supply of some number of strips of differently
 coloured squares, all of the same length. For instance you might have:
+
 ![carpet example](carpetexample.png)
+
 You will make carpets by sewing these strips together along their long sides. The criteria you need to satisfy will vary. It might be strictly forbidden to have two squares of the
 same colour sewn together. Or, it might be desirable to have as many such coincidences
 as possible or the best possible balance between coincidences and differences.
