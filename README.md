@@ -1,4 +1,10 @@
 # Carpets
+Cayden - Base methods to be used by the different match types
+Tristan - Max Match
+Rochelle - Balanced
+Isaac - Not Match
+
+## Carpets Narrative
 Your great aunt Maude has, over the years, acquired a large collection of strips of carpet
 squares. She wants to start a business of sewing them together into larger carpets for
 sale. Of course people’s tastes differ so the criteria that make a carpet desirable can also
