@@ -142,7 +142,7 @@ public class MakeCarpets {
         if (mode != 'b' && mode != 'n' && mode != 'm') {
             mode = 'n';
         }
-        if (length == -1) {
+        if (length <= 0) {
             length = size;
         }
     }
@@ -184,7 +184,7 @@ public class MakeCarpets {
      * @return number of matches between the two carpets
      */
     private static int countMatches(String carpet, String carpet2) {
-        String carpet1 = carpet.substring(carpet.length() - 4, carpet.length());
+        String carpet1 = carpet.substring(carpet.length() - (carpet2.length() + 1), carpet.length());
         int matches = 0;
         int matchesReversed = 0;
         for (int i = 0; i < carpet1.length(); i++) {
