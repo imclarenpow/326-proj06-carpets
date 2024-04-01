@@ -1,7 +1,7 @@
 /*
- * Author: Cayden Scott, Isaac LASTNAME, Rochell LASTNAME, Tristan Kitto
+ * Author: Cayden Scott, Isaac Powell, Rochell Cole, Tristan Kitto
  * Description: Program which reads from stdin, parsing each line corresponding to 
- * a strip of carpet. It will then, from this stock and given parameters output a piece
+ * a strip of carpet. It will then, from this stock and given parameters, output a piece
  * of carpet that can be made.
  */
 
@@ -44,7 +44,7 @@ public class MakeCarpets {
                 output = noMatches(stock);
                 break;
             case 'm':
-                output = maxMaches(stock);
+                output = maxMatches(stock);
                 break;
             case 'b':
                 output = balanced(stock);
@@ -75,8 +75,25 @@ public class MakeCarpets {
      * @return carpet created in a String 'output', followed by the number of
      * matches on the next line at the end of a string
      */
-    private static String maxMaches(HashMap<String, Integer> stock) {
-        return "";
+    private static String maxMatches(HashMap<String, Integer> stock) {
+        String output = "";
+        int matches = 0;
+        HashMap.Entry<String, Integer> carpet = stock.entrySet().iterator().next();
+        output = carpet.getKey() + "\n";
+        stock.replace(carpet.getKey(), carpet.getValue() - 1);
+        if (stock.get(carpet.getKey()) == 0) {
+            stock.remove(carpet.getKey());
+        }
+        for (int i = 0; i < length - 1; i++) {
+            String nextCarpet = findMaxCarpet(stock, output);
+            matches += countMatches(output, nextCarpet);
+            output += nextCarpet + "\n";
+            stock.replace(nextCarpet, stock.get(nextCarpet) - 1);
+            if (stock.get(nextCarpet) == 0) {
+                stock.remove(nextCarpet);
+            }
+        }
+        return output + matches;
     }
 
     /*
@@ -137,5 +154,52 @@ public class MakeCarpets {
     private static void printUsage() {
         System.err.println("\n\tUsage: java MakeCarpets <flag> <multiplier> < inputfile.txt\n");
         System.exit(1);
+    }
+
+    /**
+     * Finds the carpet in the stock which has the most matches with the current
+     * 
+     * @param stock  - HashMap containing the current stock of carpet
+     * @param output - the current carpet being built
+     * @return the carpet with the most matches
+     */
+    private static String findMaxCarpet(HashMap<String, Integer> stock, String output) {
+        String nextCarpet = "";
+        int maxMatches = 0;
+        for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
+            int matches = countMatches(output, entry.getKey());
+            if (matches > maxMatches) {
+                maxMatches = matches;
+                nextCarpet = entry.getKey();
+            }
+        }
+        return nextCarpet;
+    }
+
+    /**
+     * Counts the number of matches between two carpets
+     * 
+     * @param carpet1 - first carpet to be compared
+     * @param carpet2 - second carpet to be compared
+     * @return number of matches between the two carpets
+     */
+    private static int countMatches(String carpet, String carpet2) {
+        String carpet1 = carpet.substring(carpet.length() - 4, carpet.length());
+        int matches = 0;
+        int matchesReversed = 0;
+        for (int i = 0; i < carpet1.length(); i++) {
+            if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == carpet2.charAt(i)) {
+                matches++;
+            }
+        }
+
+        String reversedCarpet2 = new StringBuilder(carpet2).reverse().toString();
+        for (int i = 0; i < carpet1.length(); i++) {
+            if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == reversedCarpet2.charAt(i)) {
+                matchesReversed++;
+            }
+        }
+
+        return matches > matchesReversed ? matches : matchesReversed;
     }
 }
