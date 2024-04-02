@@ -1,17 +1,21 @@
+import java.util.*;
+
 /*
  * Author: Cayden Scott, Isaac Powell, Rochell Cole, Tristan Kitto
  * Description: Program which reads from stdin, parsing each line corresponding to 
  * a strip of carpet. It will then, from this stock and given parameters, output a piece
  * of carpet that can be made.
  */
-
-import java.util.HashMap;
-import java.util.Scanner;
-
 public class MakeCarpets {
 
+    // int to store the length of the carpet to be made
     private static int length = -1;
+    // char to store the mode of the carpet to be made
     private static char mode = 'n';
+    // int to store how many squares of carpet are in each row
+    private static int carpetLength = 0;
+    // HashMap to store previously computed carpets
+    private static HashMap<String, String> prevCarpets = new HashMap<>();
 
     public static void main(String[] args) {
         HashMap<String, Integer> stock = new HashMap<>();
@@ -20,6 +24,7 @@ public class MakeCarpets {
         while (in.hasNextLine()) {
             String line = in.nextLine();
             lineCount++;
+            carpetLength = line.length() - 1;
             if (!stock.containsKey(line)) {
                 stock.put(line, 1);
             } else {
@@ -76,24 +81,115 @@ public class MakeCarpets {
      * matches on the next line at the end of a string
      */
     private static String maxMatches(HashMap<String, Integer> stock) {
+        // find the best carpet using the carpet with the highest stock as the starting
+        // point
         String output = "";
         int matches = 0;
-        HashMap.Entry<String, Integer> carpet = stock.entrySet().iterator().next();
+
+        // find the carpet with the highest stock
+        HashMap<String, Integer> stockCopy = new HashMap<>(stock);
+        HashMap.Entry<String, Integer> carpet = Collections.max(stock.entrySet(), Map.Entry.comparingByValue());
+
+        // add the highest stock carpet to the output
         output = carpet.getKey() + "\n";
-        stock.replace(carpet.getKey(), carpet.getValue() - 1);
-        if (stock.get(carpet.getKey()) == 0) {
-            stock.remove(carpet.getKey());
-        }
+        stockCopy.put(carpet.getKey(), carpet.getValue() - 1);
+
+        // add the next carpets to the output
         for (int i = 0; i < length - 1; i++) {
-            String nextCarpet = findMaxCarpet(stock, output);
-            matches += countMatches(output, nextCarpet);
-            output += nextCarpet + "\n";
-            stock.replace(nextCarpet, stock.get(nextCarpet) - 1);
-            if (stock.get(nextCarpet) == 0) {
-                stock.remove(nextCarpet);
+            String nextCarpet = findMaxCarpet(stockCopy, output);
+            int numMatches = countMatches(output, nextCarpet, true);
+            matches += Math.abs(numMatches);
+            if (numMatches < 0) {
+                String reversedNextCarpet = new StringBuilder(nextCarpet).reverse().toString();
+                output += reversedNextCarpet + "\n";
+            } else {
+                output += nextCarpet + "\n";
+            }
+            stockCopy.put(nextCarpet, stockCopy.get(nextCarpet) - 1);
+            prevCarpets.put(output + (length - 1 - i), output + matches);
+        }
+
+        // if the carpet is already full, return the carpet
+        if (matches == length * carpetLength) {
+            return output + matches;
+        }
+
+        // find the carpet with the most matches
+        output = dfs("", stock, 0, length);
+
+        return output;
+    }
+
+    /**
+     * Depth first search to find the carpet with the most matches
+     * 
+     * @param carpet          - the current carpet being built
+     * @param stock           - the stock of carpet to be used
+     * @param matches         - the number of matches in the current carpet
+     * @param remainingLength - the number of rows left to be built
+     * @return the carpet with the most matches
+     */
+    private static String dfs(String carpet, HashMap<String, Integer> stock, int matches, int remainingLength) {
+
+        // base case: no more rows to build, return the max carpet + number of matches
+        if (remainingLength == 0) {
+            return carpet + matches;
+        }
+
+        // if the previous carpets has current carpet and remaining length, return that
+        // carpet to avoid recomputation
+        if (prevCarpets.containsKey(carpet + remainingLength)) {
+            return prevCarpets.get(carpet + remainingLength);
+        }
+
+        String maxCarpet = carpet;
+        int maxMatches = matches;
+
+        // iterate through the stock to find the carpet with the most matches
+        for (String nextCarpet : stock.keySet()) {
+
+            // if the carpet is out of stock, skip
+            if (stock.get(nextCarpet) > 0) {
+
+                // find the number of matches between the current carpet and the next carpet
+                int numMatches = countMatches(carpet, nextCarpet, true);
+
+                // calculate potential number of matches if all further carpets give max matches
+                int potentialMatches = matches + Math.abs(numMatches) + remainingLength * carpetLength;
+
+                if (potentialMatches >= maxMatches) {
+
+                    stock.put(nextCarpet, stock.get(nextCarpet) - 1);
+
+                    // if the next carpet needs to be reversed, reverse it
+                    if (numMatches < 0) {
+                        nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
+                    }
+
+                    // recursively call the dfs with the next carpet
+                    String result = dfs(carpet + nextCarpet + "\n", stock, matches + Math.abs(numMatches),
+                            remainingLength - 1);
+
+                    // update the max carpet and matches if the current carpet has more matches
+                    String matchesStr = result.substring(result.lastIndexOf("\n") + 1);
+                    int newMatches = matchesStr.isEmpty() ? 0 : Integer.parseInt(matchesStr);
+                    if (newMatches > maxMatches) {
+                        maxMatches = newMatches;
+                        maxCarpet = result;
+                    }
+
+                    // put the carpet back in the stock
+                    if (numMatches < 0) {
+                        nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
+                    }
+                    stock.put(nextCarpet, stock.get(nextCarpet) + 1);
+                }
             }
         }
-        return output + matches;
+
+        // store the current carpet and remaining length for future reference
+        prevCarpets.put(carpet + remainingLength, maxCarpet);
+        return maxCarpet;
     }
 
     /*
@@ -167,8 +263,11 @@ public class MakeCarpets {
         String nextCarpet = "";
         int maxMatches = 0;
         for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
-            int matches = countMatches(output, entry.getKey());
-            if (matches > maxMatches) {
+            if (entry.getValue() <= 0) {
+                continue;
+            }
+            int matches = countMatches(output, entry.getKey(), true);
+            if (Math.abs(matches) > Math.abs(maxMatches)) {
                 maxMatches = matches;
                 nextCarpet = entry.getKey();
             }
@@ -181,10 +280,15 @@ public class MakeCarpets {
      * 
      * @param carpet1 - first carpet to be compared
      * @param carpet2 - second carpet to be compared
-     * @return number of matches between the two carpets
+     * @param max     - boolean to determine if the output should be the maximum
+     *                matches (including reversed carpet2)
+     * @return number of matches between the two carpets, will be negative if the
+     *         second carpet needs to be reversed to find a max
      */
-    private static int countMatches(String carpet, String carpet2) {
-        String carpet1 = carpet.substring(carpet.length() - (carpet2.length() + 1), carpet.length());
+    private static int countMatches(String carpet, String carpet2, boolean max) {
+        // find the last carpetLength characters of the current carpet
+        int beginIndex = Math.max(0, carpet.length() - (carpet2.length() + 1));
+        String carpet1 = carpet.substring(beginIndex, carpet.length());
         int matches = 0;
         int matchesReversed = 0;
         for (int i = 0; i < carpet1.length(); i++) {
@@ -193,13 +297,36 @@ public class MakeCarpets {
             }
         }
 
-        String reversedCarpet2 = new StringBuilder(carpet2).reverse().toString();
-        for (int i = 0; i < carpet1.length(); i++) {
-            if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == reversedCarpet2.charAt(i)) {
-                matchesReversed++;
+        if (max) {
+            String reversedCarpet2 = new StringBuilder(carpet2).reverse().toString();
+            for (int i = 0; i < carpet1.length(); i++) {
+                if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == reversedCarpet2.charAt(i)) {
+                    matchesReversed++;
+                }
             }
         }
 
-        return matches > matchesReversed ? matches : matchesReversed;
+        return matches > matchesReversed ? matches : (-1) * matchesReversed;
+    }
+
+    /**
+     * Counts the number of matches between two carpets
+     * 
+     * @param carpet1 - first carpet to be compared
+     * @param carpet2 - second carpet to be compared
+     * @return number of matches between the two carpets
+     */
+    private static int countMatches(String carpet, String carpet2) {
+        // find the last carpetLength characters of the current carpet
+        int beginIndex = Math.max(0, carpet.length() - (carpet2.length() + 1));
+        String carpet1 = carpet.substring(beginIndex, carpet.length());
+        int matches = 0;
+        for (int i = 0; i < carpet1.length(); i++) {
+            if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == carpet2.charAt(i)) {
+                matches++;
+            }
+        }
+
+        return matches;
     }
 }
