@@ -58,18 +58,59 @@ public class MakeCarpets {
         System.out.print(output);
     }
 
-    /*
-     * Creates a carpet from the stock which will have no matching pieces of carpet
-     * touching vertically
+    /**
+     * Creates a carpet from the stock which will have no matching pieces of carpet touching vertically
      * 
-     * @param stock - HashMap containing the current stock from which the carpet
-     * will be made
-     * 
-     * @return carpet created in a String 'output'
+     * @param stock - HashMap containing the current stock from which the carpet will be made
+     * @return carpet created in a String 'output', or "not possible" if there are matches
      */
     private static String noMatches(HashMap<String, Integer> stock) {
-        return "";
+        String output = "";
+        String prevCarpet = "";
+        int remainingLength = length;
+        while (remainingLength > 0) {
+            String noMatchingCarpet = "";
+            boolean foundCarpet = false;
+            for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
+                if (!entry.getKey().equals(prevCarpet)) {
+                    String currentCarpet = entry.getKey();
+                    if (!noMatchAux(prevCarpet, currentCarpet)) { // check there are no matches
+                        noMatchingCarpet = currentCarpet;
+                        foundCarpet = true;
+                        break;
+                    }
+                }
+            }
+            if (!foundCarpet) {
+                return "not possible\n"; // can't add the next carpet to it because it matches :(
+            }
+            output += noMatchingCarpet + "\n";
+            stock.replace(noMatchingCarpet, stock.get(noMatchingCarpet) - 1);
+            if (stock.get(noMatchingCarpet) == 0) {
+                stock.remove(noMatchingCarpet);
+            }
+            prevCarpet = noMatchingCarpet;
+            remainingLength--;
+        }
+        return output;
     }
+    /**
+     * Auxiliary Class for noMatches
+     * @return a boolean whether or not it matches
+     */
+    private static boolean noMatchAux(String previous, String current) {
+        if (previous.length() < carpetLength) {
+            return false;
+        }
+        // Compare the last column of the previous carpet with the first column of the current carpet
+        for (int i = 0; i < carpetLength; i++) {
+            if (previous.charAt(previous.length() - carpetLength + i) == current.charAt(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /*
      * Creates a carpet from the stock which has as many matches as possible
