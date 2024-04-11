@@ -31,6 +31,7 @@ public class MakeCarpets {
                 stock.replace(line, stock.get(line) + 1);
             }
         }
+        balanced(stock);
         checkArgs(args, lineCount); // Organise arguments, allowing for any order or entry
         process(stock); //
         in.close();
@@ -237,6 +238,7 @@ public class MakeCarpets {
      * Creates a carpet from the stock which is as balanced as possible between
      * having matches
      * and having non matches.
+     * Proposed solution alternates between matching carpet pieces and nonmatching
      * 
      * @param stock - HashMap containing the current stock from which the carpet
      * will be made
@@ -246,7 +248,42 @@ public class MakeCarpets {
      * and non-matches at the end of a string
      */
     private static String balanced(HashMap<String, Integer> stock) {
-        return "";
+        String proposedSolution = ""; //initialised the String for the proposed carpet
+        String[] baseCarpet = maxMatches(stock).split("\n"); //gets the carpet with the most macthes
+        int baseCarpetIndex = 0; //to keep track of place in the carpet
+        String[] stockOfNonMatchingCarpet = noMatches(stock).split("\n"); //gets stock of carpet pieces that dont match
+        int remainingLength = length; //Stores the length of the carpet to be made
+        int checkerBit = 0; //To check whether to add a matching piece or a non macthing piece
+        //if statment to see if baseCarpet length is greater than half of the required length
+            while (remainingLength > 0 ) {
+
+                if(checkerBit == 0){ //add a line from baseCarpet to proposedSolution
+                    proposedSolution += baseCarpet[baseCarpetIndex] + "\n";
+                    System.out.println(proposedSolution);
+                    baseCarpetIndex++;                    
+                    checkerBit =1; //Change the checker bit back to 1 to indiciate need for nonMatching piece
+                }    
+                else if (checkerBit == 1 ) {
+                    int indexTracker = 0;
+                    for (String carpetPiece : stockOfNonMatchingCarpet) {
+                        if (baseCarpet[baseCarpetIndex] != null &&  baseCarpet[baseCarpetIndex].equals(carpetPiece)) {
+                            proposedSolution += carpetPiece + "\n";
+                            stockOfNonMatchingCarpet[indexTracker] = null;
+                            break;                            
+                        }
+                        indexTracker++;
+                    }
+                    if(baseCarpetIndex < baseCarpet.length){
+                        checkerBit = 0;
+                    }
+                }
+    
+                remainingLength--;
+    
+            }        
+
+        int matchDifferences = Math.abs(baseCarpet.length - stockOfNonMatchingCarpet.length);
+        return proposedSolution + matchDifferences;
     }
 
     /*
