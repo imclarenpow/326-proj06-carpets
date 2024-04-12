@@ -67,52 +67,53 @@ public class MakeCarpets {
      */
     private static String noMatches(HashMap<String, Integer> stock) {
         String output = "";
-        String prevCarpet = "";
-        int remainingLength = length;
-        while (remainingLength > 0) {
-            String noMatchingCarpet = "";
-            boolean foundCarpet = false;
-            for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
-                if (!entry.getKey().equals(prevCarpet)) {
-                    String currentCarpet = entry.getKey();
-                    if (!noMatchAux(prevCarpet, currentCarpet)) { // check there are no matches
-                        noMatchingCarpet = currentCarpet;
-                        foundCarpet = true;
-                        break;
-                    }
+        int matches = 0;
+        
+        // use highest stock as first carpet placed
+        HashMap<String, Integer> workingStock = new HashMap<>(stock);
+        HashMap.Entry<String, Integer> carpet = Collections.max(stock.entrySet(), Map.Entry.comparingByValue());
+        String prevCarpet = carpet.getKey();
+        output = prevCarpet + "\n";
+        workingStock.put(carpet.getKey(), carpet.getValue()-1);
+        // for loop that runs for as long as the length specified
+        for (int i = 0; i < length - 1; i++) {
+            String nextCarpet = noMatchCarpet(workingStock, prevCarpet);
+            // if no match carpet returns not possible might as well stop the method
+            if(nextCarpet == "Not Possible"){
+                return nextCarpet;
+            }
+            output += nextCarpet + "\n";
+            prevCarpet = nextCarpet;
+            int amt = 0;
+            boolean reversed = false;
+            // checks if there is actually a key of the carpet
+            try{
+                amt = workingStock.get(nextCarpet);
+            } catch (Exception e){
+                // if not:reverse
+                reversed = true;
+            }
+            // check both ways if still not possible its not possible
+            if(amt<=0){
+                amt = workingStock.get(new StringBuilder(nextCarpet).reverse().toString());
+                reversed = true;
+                if(amt<=0){
+                    return "Not Possible";
                 }
             }
-            if (!foundCarpet) {
-                return "not possible\n"; // can't add the next carpet to it because it matches :(
+            // if reversed re reverse string and use as key to remove 1 from. else as normal.
+            if(reversed){
+                workingStock.put(new StringBuilder(nextCarpet).reverse().toString(), amt -1);
+                prevCarpets.put(output + (length - 1 - i), output + matches);
+            } else {
+                workingStock.put(nextCarpet, amt - 1);
+                prevCarpets.put(output + (length - 1 - i), output + matches);
             }
-            output += noMatchingCarpet + "\n";
-            stock.replace(noMatchingCarpet, stock.get(noMatchingCarpet) - 1);
-            if (stock.get(noMatchingCarpet) == 0) {
-                stock.remove(noMatchingCarpet);
-            }
-            prevCarpet = noMatchingCarpet;
-            remainingLength--;
         }
         return output;
     }
-    /**
-     * Auxiliary Class for noMatches
-     * @return a boolean whether or not it matches
-     */
-    private static boolean noMatchAux(String previous, String current) {
-        if (previous.length() < carpetLength) {
-            return false;
-        }
-        // Compare the last column of the previous carpet with the first column of the current carpet
-        for (int i = 0; i < carpetLength; i++) {
-            if (previous.charAt(previous.length() - carpetLength + i) == current.charAt(i)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-
+    
     /*
      * Creates a carpet from the stock which has as many matches as possible
      * 
@@ -141,7 +142,7 @@ public class MakeCarpets {
             String nextCarpet = findMaxCarpet(stockCopy, output);
             int numMatches = countMatches(output, nextCarpet, true);
             matches += Math.abs(numMatches);
-            if (numMatches < 0) {
+            if (numMatches > 0) {
                 String reversedNextCarpet = new StringBuilder(nextCarpet).reverse().toString();
                 output += reversedNextCarpet + "\n";
             } else {
@@ -155,10 +156,6 @@ public class MakeCarpets {
         if (matches == length * carpetLength) {
             return output + matches;
         }
-
-        // find the carpet with the most matches
-        output = dfs("", stock, 0, length);
-
         return output;
     }
 
@@ -352,7 +349,39 @@ public class MakeCarpets {
         }
         return nextCarpet;
     }
-
+    /** 
+     * Checks that these puppies don't match
+     * @param 
+     */
+    public static String noMatchCarpet(HashMap<String, Integer> stock, String prevCarp){
+        String[] previous = prevCarp.split("(?!^)");
+        for(HashMap.Entry<String, Integer> entry : stock.entrySet()) {
+            if(entry.getValue() <= 0){
+                continue;
+            }
+            String checkingCarpet = entry.getKey();
+            String[] current = checkingCarpet.split("(?!^)");
+            boolean reverse = false;
+            for(int i=0; i<previous.length; i++){
+                if(!reverse){
+                    if(previous[i].equals(current[i])){
+                        reverse = true;
+                        i = 0;
+                    } else if(i==previous.length-1){
+                        return checkingCarpet;
+                    }
+                }else if(reverse){
+                    if(previous[i].equals(current[previous.length-1-i])){
+                        break;
+                    } else if(i==previous.length-1){
+                        String reversedCarpet = new StringBuilder(checkingCarpet).reverse().toString();
+                        return reversedCarpet;
+                    }
+                }
+            }
+        }
+        return "Not Possible";
+    }
     /**
      * Counts the number of matches between two carpets
      * 
