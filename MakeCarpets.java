@@ -114,7 +114,7 @@ public class MakeCarpets {
     }
 
     
-    /*
+        /*
      * Creates a carpet from the stock which has as many matches as possible
      * 
      * @param stock - HashMap containing the current stock from which the carpet
@@ -142,7 +142,7 @@ public class MakeCarpets {
             String nextCarpet = findMaxCarpet(stockCopy, output);
             int numMatches = countMatches(output, nextCarpet, true);
             matches += Math.abs(numMatches);
-            if (numMatches > 0) {
+            if (numMatches < 0) {
                 String reversedNextCarpet = new StringBuilder(nextCarpet).reverse().toString();
                 output += reversedNextCarpet + "\n";
             } else {
@@ -156,6 +156,10 @@ public class MakeCarpets {
         if (matches == length * carpetLength) {
             return output + matches;
         }
+
+        // find the carpet with the most matches
+        output = dfs("", stock, 0, length);
+
         return output;
     }
 
