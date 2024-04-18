@@ -31,7 +31,7 @@ public class MakeCarpets {
                 stock.replace(line, stock.get(line) + 1);
             }
         }
-        balanced(stock);
+
         checkArgs(args, lineCount); // Organise arguments, allowing for any order or entry
         process(stock); //
         in.close();
@@ -238,53 +238,160 @@ public class MakeCarpets {
      * Creates a carpet from the stock which is as balanced as possible between
      * having matches
      * and having non matches.
-     * Proposed solution alternates between matching carpet pieces and nonmatching
      * 
      * @param stock - HashMap containing the current stock from which the carpet
      * will be made
      * 
      * @return carpet created in a String 'output', followed by the absolute value
      * of the difference between the number of matches
-     * and non-matches at the end of a string
-     */
-    private static String balanced(HashMap<String, Integer> stock) {
+     * and non-matches at the end of a string*/
+     
+
+     //java MakeCarpets.java < i1.txt -b 3
+    private static String balanced(HashMap<String, Integer> stock) { //parses in stock that has the pieces and how many there are of each piece
         String proposedSolution = ""; //initialised the String for the proposed carpet
-        String[] baseCarpet = maxMatches(stock).split("\n"); //gets the carpet with the most macthes
-        int baseCarpetIndex = 0; //to keep track of place in the carpet
-        String[] stockOfNonMatchingCarpet = noMatches(stock).split("\n"); //gets stock of carpet pieces that dont match
-        int remainingLength = length; //Stores the length of the carpet to be made
-        int checkerBit = 0; //To check whether to add a matching piece or a non macthing piece
-        //if statment to see if baseCarpet length is greater than half of the required length
-            while (remainingLength > 0 ) {
+        HashMap<String, Integer> carpetsNotInCurrent = new HashMap<>();//Hashmap to keep track of carpets not in current carpet
+        LinkedList<String> currentCarpet = new LinkedList<>(); //current carpet
+        int remainingLength = length;//Length of carpet requested by customer
+        int currentMatchDiff;//int to keep track of the matching current match differences
+        int value; //int to store value of hashmap items in various for loops
+        String carpet; //String to store carpet of hashmap items in various for loops
+        int optimalDiff = (length % 2 != 0) ? 0 : 1;//Integer for Optimal differences for a carpet length, 0 for even, 1 for odd
 
-                if(checkerBit == 0){ //add a line from baseCarpet to proposedSolution
-                    proposedSolution += baseCarpet[baseCarpetIndex] + "\n";
-                    System.out.println(proposedSolution);
-                    baseCarpetIndex++;                    
-                    checkerBit =1; //Change the checker bit back to 1 to indiciate need for nonMatching piece
-                }    
-                else if (checkerBit == 1 ) {
-                    int indexTracker = 0;
-                    for (String carpetPiece : stockOfNonMatchingCarpet) {
-                        if (baseCarpet[baseCarpetIndex] != null &&  baseCarpet[baseCarpetIndex].equals(carpetPiece)) {
-                            proposedSolution += carpetPiece + "\n";
-                            stockOfNonMatchingCarpet[indexTracker] = null;
-                            break;                            
-                        }
-                        indexTracker++;
+        //organising the matching pieces together to limit how many pieces need to get checked each time
+        int matchesComparison;
+        boolean match;
+        String carpetEntryKey;
+        int carpetEntryValue;
+        for (Map.Entry<String, Integer> stockItem : stock.entrySet()) { //cycle through every item in stock
+            value = stockItem.getValue();
+            carpet = stockItem.getKey();
+            match = false;
+            for(Map.Entry<String, Integer> carpetEntry : carpetsNotInCurrent.entrySet()){ //cycle through everything stored in carpetsNotInCurrent
+                carpetEntryKey = carpetEntry.getKey();
+                carpetEntryValue = carpetEntry.getValue();
+                matchesComparison = countMatches(carpet, carpetEntryKey, true);//checks if it matches either forwards or reversed
+                if(Math.abs(matchesComparison) == (carpetLength + 1)){//if the countmatches carpet length it must be a match either forward or reverse
+                        carpetsNotInCurrent.put(carpetEntryKey, carpetEntryValue + value);//update the key with the correct value
+                        match = true;
                     }
-                    if(baseCarpetIndex < baseCarpet.length){
-                        checkerBit = 0;
-                    }
+            }
+            if (!match) {//if it doesn't match any others reversed then add to carpetsNotInCurrent
+                    carpetsNotInCurrent.put(carpet, value);
                 }
-    
-                remainingLength--;
-    
-            }        
+        }
 
-        int matchDifferences = Math.abs(baseCarpet.length - stockOfNonMatchingCarpet.length);
-        return proposedSolution + matchDifferences;
+        //Create a start carpet
+        Iterator<Map.Entry<String, Integer>> iterator = carpetsNotInCurrent.entrySet().iterator();
+        while(iterator.hasNext() && remainingLength>0){
+            Map.Entry<String, Integer> entry = iterator.next();
+            carpet = entry.getKey();
+            value = entry.getValue();
+
+            currentCarpet.add(carpet); //adds piece to current carpet
+            remainingLength--;
+            value--;
+            
+            if (value == 0) {
+                iterator.remove(); // Remove the carpet from carpetsNotInCurrent
+            } 
+            else {
+                entry.setValue(value); //otherwise update the value in carpetsNotInCurrent
+            }
+        }
+
+        //Checking if the optimal balance has already been reached and if so output the carpet
+        currentMatchDiff = matchDifferences(currentCarpet);
+        if (currentMatchDiff== optimalDiff) {
+            for (String string : currentCarpet) {
+                proposedSolution += string + "\n";
+            }
+            return proposedSolution;
+        }        
+        String currentCarpetPiece;
+        String swapCarpetpiece;
+        String reversedSwapCarpetpiece;
+        int newMatchDiff;
+        int reverseMatchDiff;
+        StringBuilder reversedBuilder;
+        for (int i = 0; i < currentCarpet.size(); i++) {
+            currentCarpetPiece = currentCarpet.get(i);
+            for(Map.Entry<String, Integer> entry : carpetsNotInCurrent.entrySet()){                
+                swapCarpetpiece = entry.getKey();//retreive piece to swap
+                currentCarpet.set(i, swapCarpetpiece);//swap piece into current carpet
+                newMatchDiff = matchDifferences(currentCarpet); //calculate the match and non match differences
+               
+                //reverse carpet piece being swaped in
+                reversedBuilder = new StringBuilder(swapCarpetpiece);
+                reversedSwapCarpetpiece = reversedBuilder.reverse().toString();
+                //swap piece into current carpet
+                currentCarpet.set(i, reversedSwapCarpetpiece);
+                //calculate the match and non match differences
+                reverseMatchDiff = matchDifferences(currentCarpet);
+                
+                //checking if the difference is smaller than what already existed
+                if(newMatchDiff<currentMatchDiff || reverseMatchDiff<currentMatchDiff){
+                    if (reverseMatchDiff<newMatchDiff) {//if the reversed piece difference is smaller then do the following
+                        carpetsNotInCurrent.put(swapCarpetpiece, entry.getValue()-1); //remove element to be swapped from the carpetsNotIncurrent
+                        carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1); //add element being swapped out back into carpetsNotIncurrent
+                        if(reverseMatchDiff==optimalDiff){//if optimal output string
+                            for (String string : currentCarpet) {
+                                proposedSolution += string + "\n";
+                            }
+                            return proposedSolution + reverseMatchDiff;
+                        }
+                        else {                 
+                            currentMatchDiff = reverseMatchDiff;//update current diff
+                        }                        
+                    } else{//if NewMatchDiff is smaller then do the following
+                        carpetsNotInCurrent.put(swapCarpetpiece, entry.getValue()-1); //remove element to be swapped from the carpetsNotIncurrent
+                        carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1); //add element being swapped out back into carpetsNotIncurrent
+                        if(newMatchDiff==optimalDiff){
+                            currentCarpet.set(i, swapCarpetpiece);//set the carpet pieces back again
+                            for (String string : currentCarpet) {
+                                proposedSolution += string + "\n";
+                            }
+                            return proposedSolution + newMatchDiff;
+                        }
+                        else{
+                            currentCarpet.set(i, swapCarpetpiece);                            
+                            currentMatchDiff = newMatchDiff;                            
+                        }
+                    }
+                } else{ //if neither change is optimal make sure carpet isn't changed
+                    currentCarpet.set(i, currentCarpetPiece);
+                }
+            }
+            
+        }
+
+        for (String string : currentCarpet) {
+            proposedSolution += string + "\n";
+        }
+        return proposedSolution + currentMatchDiff;
     }
+
+    /**
+     * Method to assist the balance method
+     *
+     * @param currentCarpet
+     * @return the difference of matches and non matches of the current carpet
+     */
+    private static int matchDifferences(LinkedList<String> currentCarpet){
+        int currentCarpetLength = currentCarpet.size();
+        int matchCount = 0;
+        int nonmatchCount = 0;
+        int currentCarpetsMatches = 0;
+        for (int i = 1; i < currentCarpetLength; i++) {
+            currentCarpetsMatches = countMatches(currentCarpet.get(i-1),currentCarpet.get(i) , false);     
+            matchCount = matchCount + currentCarpetsMatches;
+            nonmatchCount = nonmatchCount +( (carpetLength + 1) - currentCarpetsMatches);
+            
+        }
+        currentCarpetsMatches = matchCount - nonmatchCount;//calculates the difference between matches and non matches
+        return Math.abs(currentCarpetsMatches) ;// returns the difference betrweent the count of matches and non matches
+    }
+
 
     /*
      * Method to allow arguments to be in any order, and also ensure correcty usage
@@ -387,24 +494,4 @@ public class MakeCarpets {
         return matches > matchesReversed ? matches : (-1) * matchesReversed;
     }
 
-    /**
-     * Counts the number of matches between two carpets
-     * 
-     * @param carpet1 - first carpet to be compared
-     * @param carpet2 - second carpet to be compared
-     * @return number of matches between the two carpets
-     */
-    private static int countMatches(String carpet, String carpet2) {
-        // find the last carpetLength characters of the current carpet
-        int beginIndex = Math.max(0, carpet.length() - (carpet2.length() + 1));
-        String carpet1 = carpet.substring(beginIndex, carpet.length());
-        int matches = 0;
-        for (int i = 0; i < carpet1.length(); i++) {
-            if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == carpet2.charAt(i)) {
-                matches++;
-            }
-        }
-
-        return matches;
-    }
 }
