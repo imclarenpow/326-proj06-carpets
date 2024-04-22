@@ -248,7 +248,7 @@ public class MakeCarpets {
      * and non-matches at the end of a string*/
      
 
-     //java MakeCarpets.java < i1.txt -b 3
+     //java MakeCarpets.java < i0.txt -b 3
     private static String balanced(HashMap<String, Integer> stock) { //parses in stock that has the pieces and how many there are of each piece
         String proposedSolution = ""; //initialised the String for the proposed carpet
         HashMap<String, Integer> carpetsNotInCurrent = new HashMap<>();//Hashmap to keep track of carpets not in current carpet
@@ -317,6 +317,7 @@ public class MakeCarpets {
         StringBuilder reversedBuilder;
         for (int i = 0; i < currentCarpet.size(); i++) {
             currentCarpetPiece = currentCarpet.get(i);
+            //System.out.println(currentCarpetPiece);
             for(Map.Entry<String, Integer> entry : carpetsNotInCurrent.entrySet()){                
                 swapCarpetpiece = entry.getKey();//retreive piece to swap
                 currentCarpet.set(i, swapCarpetpiece);//swap piece into current carpet
@@ -334,7 +335,15 @@ public class MakeCarpets {
                 if(newMatchDiff<currentMatchDiff || reverseMatchDiff<currentMatchDiff){
                     if (reverseMatchDiff<newMatchDiff) {//if the reversed piece difference is smaller then do the following
                         carpetsNotInCurrent.put(swapCarpetpiece, entry.getValue()-1); //remove element to be swapped from the carpetsNotIncurrent
-                        carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1); //add element being swapped out back into carpetsNotIncurrent
+                        if (carpetsNotInCurrent.get(currentCarpetPiece) != null) { //add element being swapped out back into carpetsNotIncurrent
+                            carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1);
+                        }
+                        else{
+                            carpetsNotInCurrent.put(currentCarpetPiece, 1);
+                        }
+                         
+                        //not working beacuse for a piece that is individual it won't have a value
+                        
                         if(reverseMatchDiff==optimalDiff){//if optimal output string
                             for (String string : currentCarpet) {
                                 proposedSolution += string + "\n";
@@ -346,7 +355,12 @@ public class MakeCarpets {
                         }                        
                     } else{//if NewMatchDiff is smaller then do the following
                         carpetsNotInCurrent.put(swapCarpetpiece, entry.getValue()-1); //remove element to be swapped from the carpetsNotIncurrent
-                        carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1); //add element being swapped out back into carpetsNotIncurrent
+                        if (carpetsNotInCurrent.get(currentCarpetPiece) != null) { //add element being swapped out back into carpetsNotIncurrent
+                            carpetsNotInCurrent.put(currentCarpetPiece, carpetsNotInCurrent.get(currentCarpetPiece)+1);
+                        }
+                        else{
+                            carpetsNotInCurrent.put(currentCarpetPiece, 1);
+                        } 
                         if(newMatchDiff==optimalDiff){
                             currentCarpet.set(i, swapCarpetpiece);//set the carpet pieces back again
                             for (String string : currentCarpet) {
