@@ -254,27 +254,6 @@ public class MakeCarpets {
         return b.task();
     }
 
-    /**
-     * Method to assist the balance method
-     *
-     * @param currentCarpet
-     * @return the difference of matches and non matches of the current carpet
-     */
-    private static int matchDifferences(LinkedList<String> currentCarpet){
-        int currentCarpetLength = currentCarpet.size();
-        int matchCount = 0;
-        int nonmatchCount = 0;
-        int currentCarpetsMatches = 0;
-        for (int i = 1; i < currentCarpetLength; i++) {
-            currentCarpetsMatches = countMatches(currentCarpet.get(i-1),currentCarpet.get(i) , false);     
-            matchCount = matchCount + currentCarpetsMatches;
-            nonmatchCount = nonmatchCount +( (carpetLength + 1) - currentCarpetsMatches);
-            
-        }
-        currentCarpetsMatches = matchCount - nonmatchCount;//calculates the difference between matches and non matches
-        return Math.abs(currentCarpetsMatches) ;// returns the difference betrweent the count of matches and non matches
-    }
-
 
     /*
      * Method to allow arguments to be in any order, and also ensure correcty usage
