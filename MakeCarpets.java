@@ -248,7 +248,7 @@ public class MakeCarpets {
      * and non-matches at the end of a string*/
      
 
-     //java MakeCarpets.java < i0.txt -b 3
+     //java MakeCarpets.java < test.txt -b 3
     private static String balanced(HashMap<String, Integer> stock) { //parses in stock that has the pieces and how many there are of each piece
         Balanced b = new Balanced(stock, length, carpetLength);
         return b.task();
