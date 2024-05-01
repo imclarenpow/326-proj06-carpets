@@ -62,8 +62,8 @@ public class Balanced {
             }
         }
         // if the forward balance is better than the reverse balance then return the forward carpet
-        if(Math.abs(balance[0]+fwdBalance[0]) > Math.abs(balance[0]+revBalance[0])
-            && Math.abs(balance[1]+fwdBalance[1]) > Math.abs(balance[1]+revBalance[1])){
+        if(Math.abs((balance[0]+fwdBalance[0]) - (balance[1]+fwdBalance[1]))
+            > Math.abs((balance[0]+revBalance[0]) - (balance[1]+revBalance[1]))){
             takeStock(fwd);
             balance[0] += fwdBalance[0];
             balance[1] += fwdBalance[1];
@@ -104,8 +104,9 @@ public class Balanced {
             }
             else{
                 // if the new balance is better than the previous best balance then update bestCarpet
-                if(Math.abs(balance[0]+bestBalance[0]) > Math.abs(balance[0]+workingBalance[0])
-                    && Math.abs(balance[1]+bestBalance[1]) > Math.abs(balance[1]+workingBalance[1])){
+                if(Math.abs((balance[0]+bestBalance[0]) - (balance[1]+bestBalance[1]))
+                    > Math.abs((balance[0]+workingBalance[0]) - (balance[1]+workingBalance[1]))){
+                    
                     bestBalance = workingBalance;
                     bestCarpet = key;
                 }
@@ -141,8 +142,9 @@ public class Balanced {
             }
             else{
                 // if the new balance is better than the previous best balance then update bestCarpet
-                if(Math.abs(balance[0]+bestBalance[0]) > Math.abs(balance[0]+workingBalance[0])
-                    && Math.abs(balance[1]+bestBalance[1]) > Math.abs(balance[1]+workingBalance[1])){
+                if(Math.abs((balance[0]+bestBalance[0]) - (balance[1]+bestBalance[1]))
+                    > Math.abs((balance[0]+workingBalance[0]) - (balance[1]+workingBalance[1]))){
+                        
                     bestBalance = workingBalance;
                     bestCarpet = key;
                 }
