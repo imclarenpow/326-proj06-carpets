@@ -4,6 +4,50 @@ Tristan - Max Match
 Rochelle - Balanced
 Isaac - Not Match
 
+## Implementation of MakeCarpets:
+main(String[] args) method:
+- Reads input carpets and their counts from standard input.
+- Processes the arguments and initiates the carpet making process.
+- process(HashMap<String, Integer> stock) method:
+- Determines which type of carpet to make based on the mode specified.
+- Calls the corresponding carpet-making method.
+noMatches(HashMap<String, Integer> stock) method:
+- Creates a carpet with no matching pieces vertically.
+- Uses the highest stock carpet as the starting point.
+maxMatches(HashMap<String, Integer> stock) method:
+- Creates a carpet with as many matches as possible.
+- Employs depth-first search to find the carpet with the most matches.
+balanced(HashMap<String, Integer> stock) method:
+- Creates a carpet as balanced as possible between matches and non-matches.
+- Delegates the task to the Balanced class.
+checkArgs(String[] args, int size) method:
+- Checks and parses command-line arguments.
+- Ensures correct usage of arguments.
+findMaxCarpet(HashMap<String, Integer> stock, String output) method:
+- Finds the carpet in the stock with the most matches with the current carpet.
+noMatchCarpet(HashMap<String, Integer> stock, String prevCarp) method:
+- Checks that the next carpet does not match vertically with the previous one.
+- countMatches(String carpet, String carpet2, boolean max) method:
+- Counts the number of matches between two carpets, considering both forward and reverse orientations.
+## Implementation of Balance Support Class
+Constructor:
+- Initializes the stock, length, and carpetLength properties of the class.
+task() method:
+- Generates a carpet based on the stock with balanced matches and non-matches.
+- Iterates through the length of the carpet, selecting the best next carpet to maintain balance.
+- Calculates and appends the absolute difference between matches and non-matches at the end of the output.
+findBestNext(String prevCarpet) method:
+- Evaluates forward and reverse possible next carpets.
+- Selects the carpet that leads to better balance between matches and non-matches.
+forwardCheck(String prevCarp) and reverseCheck(String prevCarp) methods:
+- Evaluate the balance of potential next carpets, considering forward and reverse orientations.
+- Return the carpet that leads to better balance.
+takeStock(String carpet) method:
+- Decrements the count of a specific carpet from the stock.
+- Removes the carpet from the stock if its count reaches zero.
+largestStock() method:
+- Finds and returns the carpet with the highest stock count.
+
 ## Carpets Narrative
 Your great aunt Maude has, over the years, acquired a large collection of strips of carpet
 squares. She wants to start a business of sewing them together into larger carpets for
