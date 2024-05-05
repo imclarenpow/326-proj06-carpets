@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * Author: Cayden Scott, Isaac Powell, Rochell Cole, Tristan Kitto
@@ -24,7 +25,7 @@ public class MakeCarpets {
         while (in.hasNextLine()) {
             String line = in.nextLine();
             lineCount++;
-            carpetLength = line.length() - 1;
+            carpetLength = line.length();
             if (!stock.containsKey(line)) {
                 stock.put(line, 1);
             } else {
@@ -60,26 +61,29 @@ public class MakeCarpets {
     }
 
     /**
-     * Creates a carpet from the stock which will have no matching pieces of carpet touching vertically
+     * Creates a carpet from the stock which will have no matching pieces of carpet
+     * touching vertically
      * 
-     * @param stock - HashMap containing the current stock from which the carpet will be made
-     * @return carpet created in a String 'output', or "not possible" if there are matches
+     * @param stock - HashMap containing the current stock from which the carpet
+     *              will be made
+     * @return carpet created in a String 'output', or "not possible" if there are
+     *         matches
      */
     private static String noMatches(HashMap<String, Integer> stock) {
         String output = "";
         int matches = 0;
-        
+
         // use highest stock as first carpet placed
         HashMap<String, Integer> workingStock = new HashMap<>(stock);
         HashMap.Entry<String, Integer> carpet = Collections.max(stock.entrySet(), Map.Entry.comparingByValue());
         String prevCarpet = carpet.getKey();
         output = prevCarpet + "\n";
-        workingStock.put(carpet.getKey(), carpet.getValue()-1);
+        workingStock.put(carpet.getKey(), carpet.getValue() - 1);
         // for loop that runs for as long as the length specified
         for (int i = 0; i < length - 1; i++) {
             String nextCarpet = noMatchCarpet(workingStock, prevCarpet);
             // if no match carpet returns not possible might as well stop the method
-            if(nextCarpet == "Not Possible"){
+            if (nextCarpet == "Not Possible") {
                 return nextCarpet;
             }
             output += nextCarpet + "\n";
@@ -87,23 +91,24 @@ public class MakeCarpets {
             int amt = 0;
             boolean reversed = false;
             // checks if there is actually a key of the carpet
-            try{
+            try {
                 amt = workingStock.get(nextCarpet);
-            } catch (Exception e){
+            } catch (Exception e) {
                 // if not:reverse
                 reversed = true;
             }
             // check both ways if still not possible its not possible
-            if(amt<=0){
+            if (amt <= 0) {
                 amt = workingStock.get(new StringBuilder(nextCarpet).reverse().toString());
                 reversed = true;
-                if(amt<=0){
+                if (amt <= 0) {
                     return "Not Possible";
                 }
             }
-            // if reversed re reverse string and use as key to remove 1 from. else as normal.
-            if(reversed){
-                workingStock.put(new StringBuilder(nextCarpet).reverse().toString(), amt -1);
+            // if reversed re reverse string and use as key to remove 1 from. else as
+            // normal.
+            if (reversed) {
+                workingStock.put(new StringBuilder(nextCarpet).reverse().toString(), amt - 1);
                 prevCarpets.put(output + (length - 1 - i), output + matches);
             } else {
                 workingStock.put(nextCarpet, amt - 1);
@@ -113,17 +118,20 @@ public class MakeCarpets {
         return output;
     }
 
-    
-        /*
+    /**
      * Creates a carpet from the stock which has as many matches as possible
      * 
      * @param stock - HashMap containing the current stock from which the carpet
-     * will be made
+     *              will be made
      * 
      * @return carpet created in a String 'output', followed by the number of
-     * matches on the next line at the end of a string
+     *         matches on the next line at the end of a string
      */
     private static String maxMatches(HashMap<String, Integer> stock) {
+        // sort stock by value in descending order
+        stock = stock.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
         // find the best carpet using the carpet with the highest stock as the starting
         // point
         String output = "";
@@ -131,7 +139,7 @@ public class MakeCarpets {
 
         // find the carpet with the highest stock
         HashMap<String, Integer> stockCopy = new HashMap<>(stock);
-        HashMap.Entry<String, Integer> carpet = Collections.max(stock.entrySet(), Map.Entry.comparingByValue());
+        HashMap.Entry<String, Integer> carpet = stock.entrySet().iterator().next();
 
         // add the highest stock carpet to the output
         output = carpet.getKey() + "\n";
@@ -149,16 +157,16 @@ public class MakeCarpets {
                 output += nextCarpet + "\n";
             }
             stockCopy.put(nextCarpet, stockCopy.get(nextCarpet) - 1);
-            prevCarpets.put(output + (length - 1 - i), output + matches);
+            prevCarpets.put(output, output + matches);
         }
 
         // if the carpet is already full, return the carpet
-        if (matches == length * carpetLength) {
+        if (matches == (length - 1) * carpetLength) {
             return output + matches;
         }
 
         // find the carpet with the most matches
-        output = dfs("", stock, 0, length);
+        output = dfs("", output + matches, stock, 0, matches, length);
 
         return output;
     }
@@ -167,12 +175,15 @@ public class MakeCarpets {
      * Depth first search to find the carpet with the most matches
      * 
      * @param carpet          - the current carpet being built
+     * @param maxCarpet       - the current carpet with the most matches
      * @param stock           - the stock of carpet to be used
      * @param matches         - the number of matches in the current carpet
+     * @param maxMatches      - the number of matches in the carpet with the most
      * @param remainingLength - the number of rows left to be built
      * @return the carpet with the most matches
      */
-    private static String dfs(String carpet, HashMap<String, Integer> stock, int matches, int remainingLength) {
+    private static String dfs(String carpet, String maxCarpet, HashMap<String, Integer> stock, int matches,
+            int maxMatches, int remainingLength) {
 
         // base case: no more rows to build, return the max carpet + number of matches
         if (remainingLength == 0) {
@@ -181,12 +192,9 @@ public class MakeCarpets {
 
         // if the previous carpets has current carpet and remaining length, return that
         // carpet to avoid recomputation
-        if (prevCarpets.containsKey(carpet + remainingLength)) {
-            return prevCarpets.get(carpet + remainingLength);
+        if (prevCarpets.containsKey(carpet)) {
+            return prevCarpets.get(carpet);
         }
-
-        String maxCarpet = carpet;
-        int maxMatches = matches;
 
         // iterate through the stock to find the carpet with the most matches
         for (String nextCarpet : stock.keySet()) {
@@ -198,40 +206,42 @@ public class MakeCarpets {
                 int numMatches = countMatches(carpet, nextCarpet, true);
 
                 // calculate potential number of matches if all further carpets give max matches
-                int potentialMatches = matches + Math.abs(numMatches) + remainingLength * carpetLength;
+                int potentialMatches = matches + Math.abs(numMatches) + (remainingLength - 1) * carpetLength;
 
-                if (potentialMatches >= maxMatches) {
-
-                    stock.put(nextCarpet, stock.get(nextCarpet) - 1);
-
-                    // if the next carpet needs to be reversed, reverse it
-                    if (numMatches < 0) {
-                        nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
-                    }
-
-                    // recursively call the dfs with the next carpet
-                    String result = dfs(carpet + nextCarpet + "\n", stock, matches + Math.abs(numMatches),
-                            remainingLength - 1);
-
-                    // update the max carpet and matches if the current carpet has more matches
-                    String matchesStr = result.substring(result.lastIndexOf("\n") + 1);
-                    int newMatches = matchesStr.isEmpty() ? 0 : Integer.parseInt(matchesStr);
-                    if (newMatches > maxMatches) {
-                        maxMatches = newMatches;
-                        maxCarpet = result;
-                    }
-
-                    // put the carpet back in the stock
-                    if (numMatches < 0) {
-                        nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
-                    }
-                    stock.put(nextCarpet, stock.get(nextCarpet) + 1);
+                if (potentialMatches <= maxMatches) {
+                    continue;
                 }
+
+                stock.put(nextCarpet, stock.get(nextCarpet) - 1);
+
+                // if the next carpet needs to be reversed, reverse it
+                if (numMatches < 0) {
+                    nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
+                }
+
+                // recursively call the dfs with the next carpet
+                String result = dfs(carpet + nextCarpet + "\n", maxCarpet, stock, matches + Math.abs(numMatches),
+                        maxMatches, remainingLength - 1);
+
+                // update the max carpet and matches if the current carpet has more matches
+                String matchesStr = result.substring(result.lastIndexOf("\n") + 1);
+                int newMatches = matchesStr.isEmpty() ? 0 : Integer.parseInt(matchesStr);
+                if (newMatches > maxMatches) {
+                    maxMatches = newMatches;
+                    maxCarpet = result;
+                }
+
+                // put the carpet back in the stock
+                if (numMatches < 0) {
+                    nextCarpet = new StringBuilder(nextCarpet).reverse().toString();
+                }
+                stock.put(nextCarpet, stock.get(nextCarpet) + 1);
+
             }
         }
 
         // store the current carpet and remaining length for future reference
-        prevCarpets.put(carpet + remainingLength, maxCarpet);
+        prevCarpets.put(carpet, maxCarpet);
         return maxCarpet;
     }
 
@@ -241,19 +251,19 @@ public class MakeCarpets {
      * and having non matches.
      * 
      * @param stock - HashMap containing the current stock from which the carpet
-     * will be made
+     *              will be made
      * 
      * @return carpet created in a String 'output', followed by the absolute value
-     * of the difference between the number of matches
-     * and non-matches at the end of a string*/
-     
+     *         of the difference between the number of matches
+     *         and non-matches at the end of a string
+     */
 
-     //java MakeCarpets.java < test.txt -b 3
-    private static String balanced(HashMap<String, Integer> stock) { //parses in stock that has the pieces and how many there are of each piece
+    // java MakeCarpets.java < test.txt -b 3
+    private static String balanced(HashMap<String, Integer> stock) { // parses in stock that has the pieces and how many
+                                                                     // there are of each piece
         Balanced b = new Balanced(stock, length, carpetLength);
         return b.task();
     }
-
 
     /*
      * Method to allow arguments to be in any order, and also ensure correcty usage
@@ -319,33 +329,43 @@ public class MakeCarpets {
                 nextCarpet = entry.getKey();
             }
         }
+        if (maxMatches == 0) {
+            for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
+                if (entry.getValue() <= 0) {
+                    continue;
+                }
+                return entry.getKey();
+            }
+        }
         return nextCarpet;
     }
-    /** 
+
+    /**
      * Checks that these puppies don't match
-     * @param 
+     * 
+     * @param
      */
-    public static String noMatchCarpet(HashMap<String, Integer> stock, String prevCarp){
+    public static String noMatchCarpet(HashMap<String, Integer> stock, String prevCarp) {
         String[] previous = prevCarp.split("(?!^)");
-        for(HashMap.Entry<String, Integer> entry : stock.entrySet()) {
-            if(entry.getValue() <= 0){
+        for (HashMap.Entry<String, Integer> entry : stock.entrySet()) {
+            if (entry.getValue() <= 0) {
                 continue;
             }
             String checkingCarpet = entry.getKey();
             String[] current = checkingCarpet.split("(?!^)");
             boolean reverse = false;
-            for(int i=0; i<previous.length; i++){
-                if(!reverse){
-                    if(previous[i].equals(current[i])){
+            for (int i = 0; i < previous.length; i++) {
+                if (!reverse) {
+                    if (previous[i].equals(current[i])) {
                         reverse = true;
                         i = 0;
-                    } else if(i==previous.length-1){
+                    } else if (i == previous.length - 1) {
                         return checkingCarpet;
                     }
-                }else if(reverse){
-                    if(previous[i].equals(current[previous.length-1-i])){
+                } else if (reverse) {
+                    if (previous[i].equals(current[previous.length - 1 - i])) {
                         break;
-                    } else if(i==previous.length-1){
+                    } else if (i == previous.length - 1) {
                         String reversedCarpet = new StringBuilder(checkingCarpet).reverse().toString();
                         return reversedCarpet;
                     }
@@ -354,6 +374,7 @@ public class MakeCarpets {
         }
         return "Not Possible";
     }
+
     /**
      * Counts the number of matches between two carpets
      * 
@@ -374,6 +395,10 @@ public class MakeCarpets {
             if (carpet1.charAt(i) != '\n' && carpet1.charAt(i) == carpet2.charAt(i)) {
                 matches++;
             }
+        }
+
+        if (matches == carpetLength) {
+            return matches;
         }
 
         if (max) {
